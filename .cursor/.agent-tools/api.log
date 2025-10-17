@@ -15,3 +15,11 @@ INFO:     Finished server process [45154]
 INFO:     Started server process [50652]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/crypto.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [50652]
+INFO:     Started server process [50811]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
