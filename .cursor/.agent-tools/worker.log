@@ -1,0 +1,37 @@
+ 
+ -------------- celery@Alexs-MacBook-Air.local v5.3.6 (emerald-rush)
+--- ***** ----- 
+-- ******* ---- macOS-13.3-arm64-arm-64bit 2025-10-17 14:21:21
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         email_agent:0x1049b6090
+- ** ---------- .> transport:   redis://localhost:6379/0
+- ** ---------- .> results:     redis://localhost:6379/0
+- *** --- * --- .> concurrency: 8 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . send_next_email
+
+[2025-10-17 14:21:21,421: WARNING/MainProcess] /Users/alexign/Desktop/email-agent-backend/.venv/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-10-17 14:21:21,430: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2025-10-17 14:21:21,431: WARNING/MainProcess] /Users/alexign/Desktop/email-agent-backend/.venv/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-10-17 14:21:21,432: INFO/MainProcess] mingle: searching for neighbors
+[2025-10-17 14:21:22,449: INFO/MainProcess] mingle: all alone
+[2025-10-17 14:21:22,461: INFO/MainProcess] celery@Alexs-MacBook-Air.local ready.
+[2025-10-17 14:22:13,416: INFO/MainProcess] Task send_next_email[65768c1f-2e29-4997-afe6-5ce70d3ba9f0] received
+[2025-10-17 14:22:19,459: INFO/ForkPoolWorker-8] Task send_next_email[65768c1f-2e29-4997-afe6-5ce70d3ba9f0] succeeded in 6.0393915840031696s: None
