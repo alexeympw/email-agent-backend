@@ -7,3 +7,11 @@ INFO:     Application startup complete.
 INFO:     127.0.0.1:49358 - "POST /campaigns/ HTTP/1.1" 200 OK
 INFO:     127.0.0.1:49371 - "POST /campaigns/2/start HTTP/1.1" 200 OK
 INFO:     127.0.0.1:49384 - "GET /campaigns/2/status HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/crypto.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45154]
+INFO:     Started server process [50652]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

@@ -18,3 +18,6 @@ def decrypt_str(token: str) -> str:
     f = _get_fernet()
     value = f.decrypt(token.encode("utf-8"))
     return value.decode("utf-8")
+
+        # TEST
+
