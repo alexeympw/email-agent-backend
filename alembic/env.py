@@ -30,6 +30,8 @@ def get_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if url is None:
         raise RuntimeError("DATABASE_URL is not set")
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
     return url
 
 
