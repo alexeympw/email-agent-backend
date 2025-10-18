@@ -53,8 +53,22 @@ def upgrade() -> None:
     # Add user_id column as nullable first
     op.add_column('campaigns', sa.Column('user_id', sa.Integer(), nullable=True))
     
-    # Update existing campaigns to use the default user
-    op.execute("UPDATE campaigns SET user_id = (SELECT id FROM users WHERE email = 'admin@upvote.club')")
+    # Update existing campaigns to use the default user (only if there are campaigns)
+    op.execute("""
+        UPDATE campaigns 
+        SET user_id = (SELECT id FROM users WHERE email = 'a@aiemailnewsletter.com')
+        WHERE user_id IS NULL
+    """)
+    
+    # Verify that all campaigns now have user_id set
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM campaigns WHERE user_id IS NULL) THEN
+                RAISE EXCEPTION 'Some campaigns still have NULL user_id after update';
+            END IF;
+        END $$;
+    """)
     
     # Now make the column NOT NULL
     op.alter_column('campaigns', 'user_id', nullable=False)
