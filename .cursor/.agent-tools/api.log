@@ -449,3 +449,52 @@ INFO:     Finished server process [77140]
 INFO:     Started server process [77189]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77189]
+INFO:     Started server process [77922]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77922]
+INFO:     Started server process [77927]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77927]
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Started server process [77935]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Started server process [77953]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77953]
+WARNING:  WatchFiles detected changes in 'app/routers/campaigns.py'. Reloading...
+INFO:     Started server process [77959]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [77965]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/tasks.py', 'app/routers/campaigns.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [77965]
+INFO:     Started server process [77975]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

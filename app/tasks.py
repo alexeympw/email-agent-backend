@@ -16,17 +16,22 @@ from .email_sender import send_email_smtp
 
 def _get_delay_seconds(campaign: Campaign) -> int:
     # round up to be safe for provider limits
-    return max(0, math.ceil(campaign.limit_window_seconds / max(1, campaign.limit_count)))
+    delay = max(0, math.ceil(campaign.limit_window_seconds / max(1, campaign.limit_count)))
+    print(f"Calculated delay for campaign {campaign.id}: {delay} seconds (window: {campaign.limit_window_seconds}, count: {campaign.limit_count})")
+    return delay
 
 
 @celery.task(name="send_next_email")
 def send_next_email(campaign_id: int) -> None:
+    print(f"Starting send_next_email task for campaign {campaign_id}")
     db: Session = SessionLocal()
     try:
         campaign: Optional[Campaign] = db.get(Campaign, campaign_id)
         if campaign is None:
+            print(f"Campaign {campaign_id} not found")
             return
         if campaign.status != CampaignStatus.running:
+            print(f"Campaign {campaign_id} status is {campaign.status}, not running")
             return
 
         # next pending recipient
@@ -39,9 +44,12 @@ def send_next_email(campaign_id: int) -> None:
 
         if recipient is None:
             # complete campaign
+            print(f"No more pending recipients for campaign {campaign_id}, marking as completed")
             campaign.status = CampaignStatus.completed
             db.commit()
             return
+
+        print(f"Found recipient {recipient.id} ({recipient.to_email}) for campaign {campaign_id}")
 
         # decrypt SMTP creds
         username = decrypt_str(campaign.smtp_username_enc)
@@ -51,6 +59,7 @@ def send_next_email(campaign_id: int) -> None:
         db.commit()
 
         try:
+            print(f"Sending email to {recipient.to_email}")
             message_id, smtp_response = send_email_smtp(
                 smtp_host=campaign.smtp_host,
                 smtp_port=campaign.smtp_port,
@@ -65,6 +74,7 @@ def send_next_email(campaign_id: int) -> None:
                 use_ssl=campaign.smtp_ssl,
             )
 
+            print(f"Email sent successfully to {recipient.to_email}")
             recipient.status = RecipientStatus.sent
             recipient.sent_at = datetime.now(timezone.utc)
             recipient.last_error = None
@@ -84,6 +94,7 @@ def send_next_email(campaign_id: int) -> None:
             db.commit()
         except Exception as e:  # noqa: BLE001
             err = str(e)
+            print(f"Failed to send email to {recipient.to_email}: {err}")
             recipient.status = RecipientStatus.failed
             recipient.last_error = err
 
@@ -109,13 +120,20 @@ def send_next_email(campaign_id: int) -> None:
             ).limit(1)
         ).scalar_one_or_none()
 
+        print(f"Checking for remaining recipients for campaign {campaign_id}: {'found' if remaining else 'none'}")
+        
         if remaining is not None and campaign.status == CampaignStatus.running:
             delay = _get_delay_seconds(campaign)
+            print(f"Scheduling next email for campaign {campaign_id} with delay {delay} seconds")
             send_next_email.apply_async(args=[campaign.id], countdown=delay)
         else:
             # No remaining -> mark completed if not already
             if campaign.status == CampaignStatus.running:
+                print(f"No more recipients for campaign {campaign_id}, marking as completed")
                 campaign.status = CampaignStatus.completed
                 db.commit()
+            else:
+                print(f"Campaign {campaign_id} status is {campaign.status}, not scheduling next")
     finally:
+        print(f"Completed send_next_email task for campaign {campaign_id}")
         db.close()

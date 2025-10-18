@@ -90,6 +90,7 @@ def start_campaign(campaign_id: int, db: Session = Depends(get_db)) -> dict:
     campaign.status = CampaignStatus.running
     db.commit()
 
+    print(f"Starting campaign {campaign.id} with {has_any} recipients")
     send_next_email.apply_async(args=[campaign.id], countdown=0)
     return {"status": "started", "id": campaign.id}
 
