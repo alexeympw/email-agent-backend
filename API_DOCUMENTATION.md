@@ -5,8 +5,16 @@ Backend service for email newsletter campaigns with background processing, SMTP 
 
 **Base URL:** `https://aiemailnewsletter-5f12f604df43.herokuapp.com`
 
+### Database Schema
+The system uses the following main entities:
+- **Users**: Admin users who can create campaigns
+- **ApiKeys**: API keys for authentication (future feature)
+- **Campaigns**: Email campaigns with SMTP settings and content
+- **Recipients**: Email recipients for each campaign
+- **SentEmails**: Log of all sent emails with delivery status
+
 ## Authentication
-No authentication required for this version.
+Currently using a default admin user system. All campaigns are automatically associated with the default admin user (`a@aiemailnewsletter.com`). Future versions will include API key authentication.
 
 ## Endpoints
 
@@ -66,7 +74,7 @@ Test SMTP credentials before creating campaigns.
 ### 3. Create Campaign
 **POST** `/campaigns/`
 
-Create a new email campaign with recipients and SMTP settings.
+Create a new email campaign with recipients and SMTP settings. The campaign will be automatically associated with the default admin user.
 
 **Request Body:**
 ```json
@@ -216,7 +224,7 @@ if (!smtpVerify.ok) {
   throw new Error('SMTP verification failed');
 }
 
-// 2. Create campaign
+// 2. Create campaign (automatically associated with default admin user)
 const campaign = await fetch('/campaigns/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -378,6 +386,11 @@ Always verify SMTP credentials before creating campaigns to avoid failures.
    - Check SMTP provider's sending limits
    - Monitor bounce rates
 
+5. **Database Migration Issues**
+   - If deployment fails due to migration errors, check that all models are properly defined
+   - The system automatically creates a default admin user (`a@aiemailnewsletter.com`) for existing campaigns
+   - All campaigns are automatically associated with this default user
+
 ### Logs Access
 ```bash
 # Web application logs
@@ -394,6 +407,57 @@ heroku run -a aiemailnewsletter -- python -c "from app.db import SessionLocal; p
 - No rate limiting on API endpoints
 - SMTP rate limiting controlled by campaign settings
 - Redis and PostgreSQL limits depend on Heroku plan
+
+## User Management
+
+### Current Implementation
+The system currently uses a simplified user management approach:
+
+1. **Default Admin User**: All campaigns are automatically associated with a default admin user (`a@aiemailnewsletter.com`)
+2. **Automatic User Creation**: If the default user doesn't exist, it's created automatically when the first campaign is created
+3. **No Authentication Required**: Currently, no authentication is required for API access
+
+### Future Authentication (Planned)
+The system is prepared for future API key authentication:
+
+- **User Management**: Admin users can be created and managed
+- **API Keys**: Each user can have multiple API keys for different applications
+- **Key Expiration**: API keys can have expiration dates
+- **Usage Tracking**: Last used timestamps for API keys
+
+### Database Structure
+```sql
+-- Users table
+users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(320) UNIQUE NOT NULL,
+  name VARCHAR(255),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+)
+
+-- API Keys table (for future use)
+api_keys (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  key_name VARCHAR(255) NOT NULL,
+  key_hash VARCHAR(255) UNIQUE NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  UNIQUE(user_id, key_name)
+)
+
+-- Campaigns table (updated)
+campaigns (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  -- ... other fields
+)
+```
 
 ## Support
 For technical issues, check logs and verify SMTP settings. The system is designed to be self-healing for temporary network issues.

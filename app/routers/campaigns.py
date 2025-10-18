@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..crypto import encrypt_str
 from ..db import get_db
-from ..models import Campaign, CampaignStatus, Recipient, RecipientStatus
+from ..models import Campaign, CampaignStatus, Recipient, RecipientStatus, User
 from ..schemas import (
     CampaignCreate,
     CampaignOut,
@@ -17,13 +17,36 @@ from ..tasks import send_next_email
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
 
+def get_default_user(db: Session) -> User:
+    """Get or create default user for campaigns"""
+    user = db.execute(
+        select(User).where(User.email == "a@aiemailnewsletter.com")
+    ).scalar_one_or_none()
+    
+    if user is None:
+        user = User(
+            email="a@aiemailnewsletter.com",
+            name="Admin User",
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    return user
+
+
 @router.post("/", response_model=CampaignOut)
 def create_campaign(payload: CampaignCreate, db: Session = Depends(get_db)) -> CampaignOut:
     if payload.limits_count < 1 or payload.limits_window_seconds < 1:
         raise HTTPException(status_code=400, detail="Invalid limits")
 
+    # Get default user
+    user = get_default_user(db)
+
     c = Campaign(
         name=payload.name,
+        user_id=user.id,
         smtp_host=payload.smtp.smtp_host,
         smtp_port=payload.smtp.smtp_port,
         smtp_username_enc=encrypt_str(payload.smtp.smtp_username),
