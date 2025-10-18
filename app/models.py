@@ -24,6 +24,7 @@ from .db import Base
 class CampaignStatus(str, Enum):
     draft = "draft"
     running = "running"
+    paused = "paused"
     completed = "completed"
     failed = "failed"
 

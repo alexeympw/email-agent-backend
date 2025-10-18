@@ -147,7 +147,47 @@ Start sending emails for a campaign. This triggers background processing.
 - `400`: Campaign already running or completed
 - `400`: No recipients found
 
-### 5. Get Campaign Status
+### 5. Pause Campaign
+**POST** `/campaigns/{campaign_id}/pause`
+
+Pause a running campaign. Stops sending emails but preserves progress.
+
+**Parameters:**
+- `campaign_id` (integer, path): Campaign ID
+
+**Response:**
+```json
+{
+  "status": "paused",
+  "id": 1
+}
+```
+
+**Error Responses:**
+- `404`: Campaign not found
+- `400`: Campaign is not running
+
+### 6. Resume Campaign
+**POST** `/campaigns/{campaign_id}/resume`
+
+Resume a paused campaign. Continues sending emails from where it left off.
+
+**Parameters:**
+- `campaign_id` (integer, path): Campaign ID
+
+**Response:**
+```json
+{
+  "status": "resumed",
+  "id": 1
+}
+```
+
+**Error Responses:**
+- `404`: Campaign not found
+- `400`: Campaign is not paused
+
+### 7. Get Campaign Status
 **GET** `/campaigns/{campaign_id}/status`
 
 Get real-time progress of a campaign.
@@ -171,6 +211,7 @@ Get real-time progress of a campaign.
 **Status Values:**
 - `draft`: Campaign created but not started
 - `running`: Campaign is actively sending emails
+- `paused`: Campaign is paused (can be resumed)
 - `completed`: All emails sent successfully
 - `failed`: Campaign failed due to critical error
 
@@ -252,6 +293,12 @@ const campaignId = campaignData.id;
 // Start campaign
 await fetch(`/campaigns/${campaignId}/start`, { method: 'POST' });
 
+// Pause campaign
+await fetch(`/campaigns/${campaignId}/pause`, { method: 'POST' });
+
+// Resume campaign
+await fetch(`/campaigns/${campaignId}/resume`, { method: 'POST' });
+
 // Poll for status updates
 const pollStatus = async (campaignId) => {
   const response = await fetch(`/campaigns/${campaignId}/status`);
@@ -267,6 +314,11 @@ const pollStatus = async (campaignId) => {
   
   if (status.status === 'failed') {
     console.log('Campaign failed!');
+    return;
+  }
+  
+  if (status.status === 'paused') {
+    console.log('Campaign is paused');
     return;
   }
   
@@ -290,7 +342,7 @@ useEffect(() => {
     const status = await response.json();
     setCampaignStatus(status);
     
-    if (status.status === 'completed' || status.status === 'failed') {
+    if (status.status === 'completed' || status.status === 'failed' || status.status === 'paused') {
       clearInterval(interval);
     }
   }, 2000);

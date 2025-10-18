@@ -95,6 +95,37 @@ def start_campaign(campaign_id: int, db: Session = Depends(get_db)) -> dict:
     return {"status": "started", "id": campaign.id}
 
 
+@router.post("/{campaign_id}/pause")
+def pause_campaign(campaign_id: int, db: Session = Depends(get_db)) -> dict:
+    campaign = db.get(Campaign, campaign_id)
+    if campaign is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.status != CampaignStatus.running:
+        raise HTTPException(status_code=400, detail="Campaign is not running")
+    
+    print(f"Pausing campaign {campaign.id}")
+    campaign.status = CampaignStatus.paused
+    db.commit()
+    return {"status": "paused", "id": campaign.id}
+
+
+@router.post("/{campaign_id}/resume")
+def resume_campaign(campaign_id: int, db: Session = Depends(get_db)) -> dict:
+    campaign = db.get(Campaign, campaign_id)
+    if campaign is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.status != CampaignStatus.paused:
+        raise HTTPException(status_code=400, detail="Campaign is not paused")
+    
+    print(f"Resuming campaign {campaign.id}")
+    campaign.status = CampaignStatus.running
+    db.commit()
+    
+    # Start sending emails again
+    send_next_email.apply_async(args=[campaign.id], countdown=0)
+    return {"status": "resumed", "id": campaign.id}
+
+
 @router.get("/{campaign_id}/status", response_model=CampaignStatusOut)
 def campaign_status(campaign_id: int, db: Session = Depends(get_db)) -> CampaignStatusOut:
     campaign = db.get(Campaign, campaign_id)

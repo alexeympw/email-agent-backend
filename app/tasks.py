@@ -30,8 +30,12 @@ def send_next_email(campaign_id: int) -> None:
         if campaign is None:
             print(f"Campaign {campaign_id} not found")
             return
-        if campaign.status != CampaignStatus.running:
-            print(f"Campaign {campaign_id} status is {campaign.status}, not running")
+        if campaign.status not in (CampaignStatus.running, CampaignStatus.paused):
+            print(f"Campaign {campaign_id} status is {campaign.status}, not running or paused")
+            return
+        
+        if campaign.status == CampaignStatus.paused:
+            print(f"Campaign {campaign_id} is paused, stopping execution")
             return
 
         # next pending recipient
