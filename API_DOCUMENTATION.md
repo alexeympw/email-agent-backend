@@ -5,6 +5,15 @@ Backend service for email newsletter campaigns with background processing, SMTP 
 
 **Base URL:** `https://aiemailnewsletter-5f12f604df43.herokuapp.com`
 
+### Key Features
+- ✅ **SMTP Verification** - Test credentials before sending
+- ✅ **Campaign Management** - Create, start, pause, and resume campaigns
+- ✅ **Rate Limiting** - Control sending speed to respect provider limits
+- ✅ **Real-time Progress** - Track campaign status and progress
+- ✅ **Background Processing** - Asynchronous email sending with Celery
+- ✅ **Campaign Control** - Pause/resume functionality for long-running campaigns
+- ✅ **User Management** - Default admin user system (API keys coming soon)
+
 ### Database Schema
 The system uses the following main entities:
 - **Users**: Admin users who can create campaigns
@@ -15,6 +24,49 @@ The system uses the following main entities:
 
 ## Authentication
 Currently using a default admin user system. All campaigns are automatically associated with the default admin user (`a@aiemailnewsletter.com`). Future versions will include API key authentication.
+
+## Quick Start
+
+### 1. Verify SMTP Settings
+```bash
+curl -X POST "https://aiemailnewsletter-5f12f604df43.herokuapp.com/smtp/verify" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "smtp_host": "your-smtp-host",
+    "smtp_port": 465,
+    "smtp_username": "your-username",
+    "smtp_password": "your-password",
+    "smtp_tls": false,
+    "smtp_ssl": true
+  }'
+```
+
+### 2. Create Campaign
+```bash
+curl -X POST "https://aiemailnewsletter-5f12f604df43.herokuapp.com/campaigns/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Campaign",
+    "subject": "Hello World",
+    "body": "This is a test email",
+    "limits_count": 1,
+    "limits_window_seconds": 60,
+    "smtp": { /* same SMTP config */ },
+    "recipients": [
+      {"to_email": "test@example.com", "to_name": "Test User"}
+    ]
+  }'
+```
+
+### 3. Start Campaign
+```bash
+curl -X POST "https://aiemailnewsletter-5f12f604df43.herokuapp.com/campaigns/{campaign_id}/start"
+```
+
+### 4. Monitor Progress
+```bash
+curl "https://aiemailnewsletter-5f12f604df43.herokuapp.com/campaigns/{campaign_id}/status"
+```
 
 ## Endpoints
 
@@ -329,7 +381,69 @@ const pollStatus = async (campaignId) => {
 pollStatus(campaignId);
 ```
 
-### 3. Real-time Progress Updates
+### 3. Complete Campaign Management Example
+```javascript
+class CampaignManager {
+  constructor(campaignId) {
+    this.campaignId = campaignId;
+    this.isPolling = false;
+  }
+
+  async start() {
+    const response = await fetch(`/campaigns/${this.campaignId}/start`, { method: 'POST' });
+    return response.json();
+  }
+
+  async pause() {
+    const response = await fetch(`/campaigns/${this.campaignId}/pause`, { method: 'POST' });
+    return response.json();
+  }
+
+  async resume() {
+    const response = await fetch(`/campaigns/${this.campaignId}/resume`, { method: 'POST' });
+    return response.json();
+  }
+
+  async getStatus() {
+    const response = await fetch(`/campaigns/${this.campaignId}/status`);
+    return response.json();
+  }
+
+  startPolling(callback) {
+    if (this.isPolling) return;
+    
+    this.isPolling = true;
+    const poll = async () => {
+      if (!this.isPolling) return;
+      
+      const status = await this.getStatus();
+      callback(status);
+      
+      if (['completed', 'failed', 'paused'].includes(status.status)) {
+        this.isPolling = false;
+        return;
+      }
+      
+      setTimeout(poll, 2000);
+    };
+    
+    poll();
+  }
+
+  stopPolling() {
+    this.isPolling = false;
+  }
+}
+
+// Usage
+const campaign = new CampaignManager(6);
+await campaign.start();
+campaign.startPolling((status) => {
+  console.log(`Progress: ${status.progress_pct}% (${status.sent}/${status.total})`);
+});
+```
+
+### 4. Real-time Progress Updates
 ```javascript
 // React component example
 const [campaignStatus, setCampaignStatus] = useState(null);
@@ -413,6 +527,8 @@ Always verify SMTP credentials before creating campaigns to avoid failures.
 - Allow users to view campaign history
 - Implement campaign duplication for similar sends
 - Provide campaign analytics and reporting
+- Use pause/resume functionality for long-running campaigns
+- Monitor campaign status and handle paused campaigns appropriately
 
 ## Troubleshooting
 
@@ -442,6 +558,12 @@ Always verify SMTP credentials before creating campaigns to avoid failures.
    - If deployment fails due to migration errors, check that all models are properly defined
    - The system automatically creates a default admin user (`a@aiemailnewsletter.com`) for existing campaigns
    - All campaigns are automatically associated with this default user
+
+6. **Campaign Control Issues**
+   - If a campaign appears "stuck", check if it's paused using the status endpoint
+   - Use the pause endpoint to stop a running campaign immediately
+   - Use the resume endpoint to continue a paused campaign
+   - Long delays between emails are normal based on `limits_window_seconds` setting
 
 ### Logs Access
 ```bash
